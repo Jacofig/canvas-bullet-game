@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<style>
+			body {
+				background-color: black;
+				cursor: url('kursor.png'),auto;
+			}
+			
+			canvas {
+				position: absolute;
+				margin: auto;
+				left: 0;
+				right: 0;
+				top: 0;		
+			}
+		</style>
+	</head>
+	
+	<body>
+		<canvas id="canvas"></canvas>
+		<script>
+				var canvasWidth = window.innerWidth;
+				var canvasHeight = window.innerHeight;
+				var canvas = null;
+				var bounds = null;
+				var ctx = null;
+				var mouseX = 0.0;
+				var mouseY = 0.0;
+				var windowWidth, windowHeight;
+				var n = 0;
+				var odleglosc;
+				var score = 0;
+				var color = "red";
+				var output = "SCORE: ";
+				var string;
+				var together;
+				
+				
+				var player = {
+					x: (canvasWidth * 0.5),
+					y: (canvasHeight * 0.7),
+					dx: 0.0,
+					dy: 0.0,
+					angle: 0.0,
+					radius: 17.5,
+					
+					tick: function() {
+						this.angle = Math.atan2(mouseY - this.y,mouseX - this.x);
+					},
+					
+					render: function() {
+						ctx.fillStyle = "yellow";
+						ctx.strokeStyle = "black";
+						ctx.translate(this.x,this.y);
+						ctx.rotate(this.angle);
+						ctx.beginPath();
+						ctx.moveTo(this.radius,0.0);
+						ctx.lineTo(-0.5 * this.radius,0.5 * this.radius);
+						ctx.lineTo(-0.5 * this.radius,-0.5 * this.radius);
+						ctx.lineTo(this.radius,0.0);
+						ctx.fill();
+						ctx.stroke();
+						ctx.rotate(-this.angle);
+						ctx.translate(-this.x,-this.y);
+					}
+				};
+				
+				var bullet = {
+					x: (canvasWidth * 0.5),
+					y: (canvasHeight * 0.7),
+					dx: 0.0,
+					dy: 0.0,
+					radius: 9.0,
+					
+					tick: function() {
+						this.x += this.dx;
+						this.y += this.dy;
+					},
+					
+					render: function() {
+						ctx.fillStyle = "orange";
+						ctx.strokeStyle = "white";
+						ctx.beginPath();
+						ctx.arc(this.x,this.y,this.radius,0.0,2.0*Math.PI,false);
+						ctx.fill();
+						ctx.stroke();
+					}
+				};
+
+				var enemy = {				
+					x: (canvasWidth * 0.01),
+					y: (canvasHeight * 0.3),
+					dx: 0.0,
+					dy: 0.0,
+					radius: 20.0,
+
+					render: function() {
+						
+						n = n+0.1;
+						odleglosc=Math.sqrt((this.x+n-bullet.x)*(this.x+n-bullet.x)+(this.y-bullet.y)*(this.y-bullet.y));
+						if(odleglosc < this.radius)
+						{
+							bullet.x = -2000;
+							bullet.y = -2000;
+							score++;
+							string = score.toString();
+							together = output.concat(string);
+							var playerColorR=Math.floor(Math.random()*255);
+							var playerColorG=Math.floor(Math.random()*255);
+							var playerColorB=Math.floor(Math.random()*255);
+							color = 'rgb('+playerColorR+','+playerColorG+','+playerColorB+')';	
+						}
+						if (this.x+n > canvasWidth)
+						{
+							n = 0;
+						}
+						ctx.fillStyle = color;
+						ctx.strokeStyle = "white";
+						ctx.beginPath();
+						ctx.arc(this.x+n,this.y,this.radius,0.0,2.0*Math.PI,false);
+						ctx.fill();
+						ctx.stroke();
+					}
+				}
+	
+				function loop() {
+					bullet.tick();
+					player.tick();
+					ctx.fillStyle = "deepskyblue";
+					ctx.fillRect(0,0,canvasWidth,canvasHeight);
+					bullet.render();
+					player.render();
+					enemy.render();				
+					resize();
+					requestAnimationFrame(loop);
+					setInterval('enemy.render()', 1000/60);
+					ctx.font = "30px Arial";
+					ctx.fillText(together, canvasWidth/2.2, canvasHeight/2);
+				}
+
+				function resize(){
+					var canvasWidth = window.innerWidth;
+					var canvasHeight = window.innerHeight;
+				}
+				
+				window.onmousedown = function(e) {
+					var x = mouseX - player.x;
+					var y = mouseY - player.y;
+					var l = Math.sqrt(x * x + y * y);
+					x = x / l;
+					y = y / l;
+					bullet.x = player.x;
+					bullet.y = player.y;
+					bullet.dx = x * 30.0;
+					bullet.dy = y * 30.0;
+				}
+
+				function resizeCanvas(){
+   					windowWidth=window.innerWidth;
+    				windowHeight=window.innerHeight;
+    				canvas.width=windowWidth;
+    				canvas.height=windowHeight;
+				}
+
+				
+				window.onmousemove = function(e) {
+					mouseX = e.clientX - bounds.left;
+					mouseY = e.clientY - bounds.top;
+				}
+				
+				window.onload = function() {
+					canvas = document.getElementById("canvas");
+					canvas.width = canvasWidth;
+					canvas.height = canvasHeight;
+					bounds = canvas.getBoundingClientRect();
+					ctx = canvas.getContext("2d");
+					loop();
+				}				
+		</script>
+	</body>
+</html>
